@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <meta charset="UTF-8">
+        <title>Tabla final</title>
+    </head>
+
+    <body>
+        <div class="jumbotron">
+            <h1 class="display-4" style="text-align: center">Ejercicio 03 Cliente Servidor(Tabla Final)</h1>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <!--<form action="/e01cs/table?ancho=ancho&alto=alto" method="get">--><!-- 1.context path 2.url pattern 3.recogida de parámetros-->
+                    <form id="form" name="form" class="formulario"> 
+                        <div class="mx-auto pl-5 pr-5 pb-5 pt-4 ml-5 mr-5" style="background-color: #D8F781; width: 70%; border-radius: 7px">
+                            <!--es importante un NAME a cada input pq son los parámetros que pasaremos a java(servlet)-->                                                
+                            <h3 class="mb-3"> Tabla final </h3>
+
+                            <div id="contenido">
+                                <div class="form-group">
+                                    <label for="op1">Operando 1:</label>
+                                    <input type="text" class="form-control" name="op1" id="op1" value="" placeholder="Escribe un número...">
+                                    <div id="mop1"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="op2">Operando 2:</label>
+                                    <input type="text" class="form-control" name="op2" id="op2" value="" placeholder="Escribe un número...">
+                                    <div id="mop2"></div>
+                                </div>
+                            </div>
+
+                            <!-- El botón tiene que tener un type submit para que pueda hacer el get o post-->
+                            <!-- El botón tiene que tener un type button para que haga funcion de botón-->
+                            <div>
+                                <button id="botoncal" type="button" class="btn btn-light">Crear</button>
+                                <button id="botondel" type="button" class="btn btn-info">Limpiar</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="container m-3 mx-auto" id="tabOk">                   
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">              
+                <div class="col-md-6">
+                    <div id="malert" class="mt-3 mx-auto" style="text-align: center">
+                    </div>                 
+                </div>               
+            </div>
+
+        </div>
+
+        <script>
+            $(document).ready(function () {
+
+                function isNormalInteger(str) {
+//                    return /^-?[0-9]+([.][0-9]+)?$/.test(str);
+                    return /^[1-9]\d*$/.test(str);
+                }
+
+                $("#op1").keyup(function () {
+                    if ((isNormalInteger($("#op1").val())) && ($("#op1").val() <= 100)) {
+                        $("#mop1").attr("class", "alert alert-success");
+                        $("#op1").css("border-color", "green");
+                        $("#mop1").empty().append("Correcto");
+
+                        if ((isNormalInteger($("#op2").val())) && ($("#op2").val() <= 100)) {
+                            $("#botoncal").attr("disabled", false);
+                        }
+                    } else {
+                        $("#mop1").attr("class", "alert alert-danger");
+                        $("#mop1").empty().append("Introduzca números mayores que 0 y menores que 101 en el campo 'operando 1'.");
+                        $("#op1").css("border-color", "red");
+                        $("#botoncal").attr("disabled", true);
+                    }
+                });
+
+                $("#op2").keyup(function () {
+                    if ((isNormalInteger($("#op2").val())) && ($("#op2").val() <= 100)) {
+                        $("#mop2").attr("class", "alert alert-success");
+                        $("#op2").css("border-color", "green");
+                        $("#mop2").empty().append("Correcto");
+
+                        if ((isNormalInteger($("#op1").val())) && ($("#op1").val() <= 100)) {
+                            $("#botoncal").attr("disabled", false);
+                        }
+                    } else {
+                        $("#mop2").attr("class", "alert alert-danger");
+                        $("#mop2").empty().append("Introduzca números mayores que 0 y menores que 101 en el campo 'operando 2'.");
+                        $("#op2").css("border-color", "red");
+                        $("#botoncal").attr("disabled", true);
+                    }
+                });
+
+                $("#botoncal").click(function () {
+                    var op1 = $("#op1").val();
+                    var op2 = $("#op2").val();
+
+                    var tabla = "<table class='table table-striped' style='text-align:center'>";
+
+                    for (var i = 1; i <= op1; i++) {
+                        tabla += "<tr>";
+                        for (var j = 1; j <= op2; j++) {
+                            (function (i, j) {
+                                tabla += "<td id=" + i + "-" + j + "></td>";
+                            })(i, j);
+                        }
+                        tabla += "</tr>";
+                    }
+                    tabla += "</table>";
+
+                    $("#tabOk").empty();
+                    $("#tabOk").append(tabla);
+
+
+                    for (var i = 1; i <= op1; i++) {
+                        for (var j = 1; j <= op2; j++) {
+                            (function (i, j) {
+                                //Nunca van a saltar las validaciones de servidor pq ajax está dentro del for y para que entre en el for tiene que haber pasado antes por las de cliente
+                                $.ajax({
+                                    url: "calculador?op1=" + i + "&op2=" + j + "&ope=multiplica",
+                                    method: "get",
+                                    dataType: "json",
+                                    cache: false,
+                                    success: function (dataJson) {
+                                        $("#" + i + "-" + j).empty().html(dataJson[0]); //[0] pq el array dataJson solo tiene una sola posición
+                                    }, error: function (error) {
+                                        $("#tabOk").css("visibility", "hidden");
+                                        $("#malert").attr("class", "alert alert-danger");
+                                        $("#malert").empty().append("<h4>Error</h4>");
+                                        $("#malert").append("<h5 class='alert alert-danger'>" + error.status + ": " + error.responseText + "</h5>");
+                                    }
+                                });
+                            })(i, j);
+                        }
+                    }
+                });
+
+                $("#botondel").click(function () {
+                    $("#op1").val("");
+                    $("#op2").val("");
+                    $("#resul").val("");
+                    $("#mop1").attr("class", "");
+                    $("#mop2").attr("class", "");
+                    $("#mop1").empty();
+                    $("#mop2").empty();
+                    $("#op1").css("border-color", "");
+                    $("#op2").css("border-color", "");
+                    $("#botoncal").attr("disabled", true);
+                    $("#malert").attr("class", "");
+                    $("#malert").empty();
+                    $("#tabOk").empty();
+                });
+
+
+            });
+
+
+        </script>
+    </body>
+</html>
